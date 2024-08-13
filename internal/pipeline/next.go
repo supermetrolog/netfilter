@@ -2,27 +2,27 @@ package pipeline
 
 import (
 	"errors"
-	"github.com/supermetrolog/iptables/internal/iptables"
+	"github.com/supermetrolog/iptables/internal/netfilter"
 	"github.com/supermetrolog/iptables/pkg/queue"
 )
 
 type next struct {
-	handler  iptables.Handler
+	handler  netfilter.Handler
 	Handlers queue.Queue
 }
 
-func newNext(q queue.Queue, handler iptables.Handler) next {
+func newNext(q queue.Queue, handler netfilter.Handler) next {
 	return next{
 		Handlers: q,
 		handler:  handler,
 	}
 }
-func (n next) Next(c iptables.Context) (bool, error) {
+func (n next) Next(c netfilter.Context) (bool, error) {
 	if n.Handlers.IsEmpty() {
 		return n.handler.Handle(c)
 	}
 
-	current, ok := n.Handlers.Dequeue().(iptables.Middleware)
+	current, ok := n.Handlers.Dequeue().(netfilter.Middleware)
 	if !ok {
 		return false, errors.New("unknown item in Handlers Queue")
 	}
@@ -34,6 +34,6 @@ type nextWrapper struct {
 	n *next
 }
 
-func (n nextWrapper) Handle(c iptables.Context) (bool, error) {
+func (n nextWrapper) Handle(c netfilter.Context) (bool, error) {
 	return n.n.Next(c)
 }

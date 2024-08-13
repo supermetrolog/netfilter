@@ -1,6 +1,6 @@
 package pipeline
 
-import "github.com/supermetrolog/iptables/internal/iptables"
+import "github.com/supermetrolog/iptables/internal/netfilter"
 
 type Factory struct{}
 
@@ -8,6 +8,6 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f Factory) Create() iptables.Pipeline {
+func (f Factory) Create() netfilter.Pipeline {
 	return New()
 }

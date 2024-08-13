@@ -1,24 +1,24 @@
 package handlers
 
-import "github.com/supermetrolog/iptables/internal/iptables"
+import "github.com/supermetrolog/iptables/internal/netfilter"
 
-type AcceptPolitic struct {
+type AcceptPoliticHandler struct {
 }
 
-func (p *AcceptPolitic) Handle(c iptables.Context) (bool, error) {
+func (p *AcceptPoliticHandler) Handle(c netfilter.Context) (bool, error) {
 	return true, nil
 }
 
-type DropPolitic struct {
+type DropPoliticHandler struct {
 }
 
-func (p *DropPolitic) Handle(c iptables.Context) (bool, error) {
+func (p *DropPoliticHandler) Handle(c netfilter.Context) (bool, error) {
 	return false, nil
 }
 
-type RejectPolitic struct {
+type RejectPoliticHandler struct {
 }
 
-func (p *RejectPolitic) Handle(c iptables.Context) (bool, error) {
+func (p *RejectPoliticHandler) Handle(c netfilter.Context) (bool, error) {
 	return false, nil
 }
