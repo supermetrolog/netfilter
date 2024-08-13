@@ -29,6 +29,10 @@ type NetConfig interface {
 
 type Context interface {
 	Packet() Packet
+	Table() Table
+	Chain() Chain
+	SetTable(Table)
+	SetChain(Chain)
 	StoreState(state *State)
 	Jump(c Chain, t Table) (bool, error)
 	NetConfig() NetConfig
@@ -52,9 +56,11 @@ type PipelineFactory interface {
 }
 
 type State struct {
-	Pack Packet
-	Meta any
-	Info string
+	Pack  Packet
+	Chain Chain
+	Table Table
+	Meta  any
+	Info  string
 }
 
 type Rule struct {

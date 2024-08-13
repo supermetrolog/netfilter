@@ -35,28 +35,44 @@ func main() {
 
 	// inputChain.Add(DropPolitic)
 
-	netCfg := netconfig.New().IpForwarding().WithInterface("10.10.0.0/24")
+	pipelineFactory := pipeline.NewFactory()
+
+	netCfg := netconfig.New().
+		WithInterface("10.10.0.0/24")
 
 	nf := netfilter.New(
 		&handlers.FallbackHandler{},
 		&handlers.LocalProcessHandler{},
 		netCfg,
-		pipeline.NewFactory(),
+		pipelineFactory,
 	)
 
+	srcIp := net.IPv4(211, 1, 1, 1)
+	dstIp := net.IPv4(10, 10, 10, 10)
+	pack := packet.NewPacket(&srcIp, 3000, &dstIp, 80, netfilter.Tcp)
+
+	rule1 := middlewares.NewRule("iptables -t FILTER -A INPUT -p tcp -s 211.1.1.1 -j ACCEPT", pipelineFactory, &srcIp)
+	rule2 := middlewares.NewRule("iptables -t FILTER -A INPUT -p tcp -s 10.10.10.10 -j ACCEPT", pipelineFactory, &dstIp)
+
 	err := nf.AppendRule(netfilter.Rule{
-		Tab:        netfilter.Raw,
-		Ch:         netfilter.Prerouting,
-		Middleware: middlewares.NewCheckProtocolMiddleware(netfilter.Tcp),
+		Tab:        netfilter.Filter,
+		Ch:         netfilter.Input,
+		Middleware: rule1,
 	})
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	srcIp := net.IPv4(211, 1, 1, 1)
-	dstIp := net.IPv4(10, 10, 10, 10)
-	pack := packet.NewPacket(&srcIp, 3000, &dstIp, 80, netfilter.Tcp)
+	err = nf.AppendRule(netfilter.Rule{
+		Tab:        netfilter.Filter,
+		Ch:         netfilter.Input,
+		Middleware: rule2,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	states, err := nf.Run(pack)
 
@@ -64,5 +80,7 @@ func main() {
 		log.Fatalf("netfilter error: %s", err)
 	}
 
-	log.Println(states)
+	for _, s := range states {
+		log.Printf("%v", s)
+	}
 }

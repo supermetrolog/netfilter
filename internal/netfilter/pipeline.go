@@ -27,6 +27,9 @@ func (nf *NetFilter) createDefaultChainsAndTables() {
 func (nf *NetFilter) HandleChain(ctx Context, c Chain) (bool, error) {
 	ch := nf.chains[c]
 	for _, t := range ch.tables {
+		ctx.SetChain(t.ch)
+		ctx.SetTable(t.tab)
+		
 		result, err := t.pipeline.Handle(ctx, t.politic)
 
 		if err != nil {
