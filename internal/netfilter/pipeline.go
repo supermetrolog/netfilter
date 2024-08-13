@@ -2,27 +2,26 @@ package netfilter
 
 import (
 	"fmt"
-	"github.com/supermetrolog/iptables/internal/handlers"
 )
 
 func (nf *NetFilter) createDefaultChainsAndTables() {
-	nf.SetChain(Prerouting, Raw, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Prerouting, Mangle, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Prerouting, Nat, &handlers.AcceptPoliticHandler{})
+	nf.SetChain(Prerouting, Raw, &AcceptPoliticHandler{})
+	nf.SetChain(Prerouting, Mangle, &AcceptPoliticHandler{})
+	nf.SetChain(Prerouting, Nat, &AcceptPoliticHandler{})
 
-	nf.SetChain(Forward, Mangle, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Forward, Filter, &handlers.AcceptPoliticHandler{})
+	nf.SetChain(Forward, Mangle, &AcceptPoliticHandler{})
+	nf.SetChain(Forward, Filter, &AcceptPoliticHandler{})
 
-	nf.SetChain(Input, Mangle, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Input, Filter, &handlers.AcceptPoliticHandler{})
+	nf.SetChain(Input, Mangle, &AcceptPoliticHandler{})
+	nf.SetChain(Input, Filter, &AcceptPoliticHandler{})
 
-	nf.SetChain(Output, Raw, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Output, Mangle, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Output, Nat, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Output, Filter, &handlers.AcceptPoliticHandler{})
+	nf.SetChain(Output, Raw, &AcceptPoliticHandler{})
+	nf.SetChain(Output, Mangle, &AcceptPoliticHandler{})
+	nf.SetChain(Output, Nat, &AcceptPoliticHandler{})
+	nf.SetChain(Output, Filter, &AcceptPoliticHandler{})
 
-	nf.SetChain(Postrouting, Mangle, &handlers.AcceptPoliticHandler{})
-	nf.SetChain(Postrouting, Nat, &handlers.AcceptPoliticHandler{})
+	nf.SetChain(Postrouting, Mangle, &AcceptPoliticHandler{})
+	nf.SetChain(Postrouting, Nat, &AcceptPoliticHandler{})
 }
 
 func (nf *NetFilter) HandleChain(ctx Context, c Chain) (bool, error) {

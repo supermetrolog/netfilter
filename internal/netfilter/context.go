@@ -2,33 +2,33 @@ package netfilter
 
 import "fmt"
 
-type PipelineContext struct {
+type pipelineContext struct {
 	nf     *NetFilter
 	pack   Packet
 	states []*State
 }
 
-func NewPipelineContext(nf *NetFilter, pack Packet) *PipelineContext {
-	return &PipelineContext{nf: nf, pack: pack}
+func newPipelineContext(nf *NetFilter, pack Packet) *pipelineContext {
+	return &pipelineContext{nf: nf, pack: pack}
 }
 
-func (pc *PipelineContext) Packet() Packet {
+func (pc *pipelineContext) Packet() Packet {
 	return pc.pack
 }
 
-func (pc *PipelineContext) NetSettings() NetSettings {
-	return pc.nf.netSettings
+func (pc *pipelineContext) NetConfig() NetConfig {
+	return pc.nf.netConfig
 }
 
-func (pc *PipelineContext) StoreState(state *State) {
+func (pc *pipelineContext) StoreState(state *State) {
 	pc.states = append(pc.states, state)
 }
 
-func (pc *PipelineContext) States() []*State {
+func (pc *pipelineContext) States() []*State {
 	return pc.states
 }
 
-func (pc *PipelineContext) Jump(c Chain, t Table) (bool, error) {
+func (pc *pipelineContext) Jump(c Chain, t Table) (bool, error) {
 	tab, exists := pc.nf.tables[c][t]
 
 	if exists {

@@ -2,7 +2,6 @@ package netfilter
 
 import (
 	"fmt"
-	"github.com/supermetrolog/iptables/internal/pipeline"
 )
 
 type Chain string
@@ -23,8 +22,8 @@ const (
 	Filter Table = "filter"
 )
 
-type NetSettings interface {
-	IpForwardingEnabled() bool
+type NetConfig interface {
+	IsIpForwardEnabled() bool
 	Interfaces() []string // TODO:
 }
 
@@ -32,7 +31,7 @@ type Context interface {
 	Packet() Packet
 	StoreState(state *State)
 	Jump(c Chain, t Table) (bool, error)
-	NetSettings() NetSettings
+	NetConfig() NetConfig
 }
 
 type Handler interface {
@@ -48,17 +47,8 @@ type Pipeline interface {
 	Pipe(Middleware)
 }
 
-type Settings struct {
-	interfaces          []string
-	ipForwardingEnabled bool
-}
-
-func (s Settings) Interfaces() []string {
-	return s.interfaces
-}
-
-func (s Settings) IpForwardingEnabled() bool {
-	return s.ipForwardingEnabled
+type PipelineFactory interface {
+	Create() Pipeline
 }
 
 type State struct {
@@ -102,19 +92,19 @@ func newTable(c Chain, t Table, p Pipeline, politic Handler) *table {
 type NetFilter struct {
 	endHandler          Handler
 	localProcessHandler Handler
-	pipelineFactory     pipeline.Factory
+	pipelineFactory     PipelineFactory
 	chains              map[Chain]*chain
 	tables              map[Chain]map[Table]*table
-	netSettings         NetSettings
+	netConfig           NetConfig
 }
 
-func New(endHandler Handler, localProcessHandler Handler, settings NetSettings, pipelineFactory pipeline.Factory) *NetFilter {
+func New(endHandler Handler, localProcessHandler Handler, netConfig NetConfig, pipelineFactory PipelineFactory) *NetFilter {
 	nf := &NetFilter{
 		chains:              make(map[Chain]*chain),
 		tables:              make(map[Chain]map[Table]*table),
 		endHandler:          endHandler,
 		localProcessHandler: localProcessHandler,
-		netSettings:         settings,
+		netConfig:           netConfig,
 		pipelineFactory:     pipelineFactory,
 	}
 
@@ -133,6 +123,10 @@ func (nf *NetFilter) AppendRule(r Rule) error {
 }
 
 func (nf *NetFilter) SetChain(c Chain, t Table, politic Handler) {
+	if _, exists := nf.tables[c]; !exists {
+		nf.tables[c] = make(map[Table]*table)
+	}
+
 	if tab, exists := nf.tables[c][t]; exists {
 		tab.politic = politic
 		return
@@ -152,7 +146,7 @@ func (nf *NetFilter) SetChain(c Chain, t Table, politic Handler) {
 }
 
 func (nf *NetFilter) Run(pack Packet) ([]*State, error) {
-	ctx := NewPipelineContext(nf, pack)
+	ctx := newPipelineContext(nf, pack)
 
 	result, err := nf.HandleChain(ctx, Prerouting)
 	if err != nil {
@@ -163,7 +157,7 @@ func (nf *NetFilter) Run(pack Packet) ([]*State, error) {
 	}
 
 	// TODO: check target ip
-	if nf.netSettings.IpForwardingEnabled() {
+	if nf.netConfig.IsIpForwardEnabled() {
 		result, err = nf.HandleChain(ctx, Forward)
 		if err != nil {
 			return nil, err
